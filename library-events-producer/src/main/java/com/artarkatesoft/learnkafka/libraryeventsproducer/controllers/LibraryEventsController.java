@@ -1,6 +1,7 @@
 package com.artarkatesoft.learnkafka.libraryeventsproducer.controllers;
 
 import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEvent;
+import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEventType;
 import com.artarkatesoft.learnkafka.libraryeventsproducer.producers.LibraryEventProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class LibraryEventsController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LibraryEvent newLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
-//        SendResult<Integer, String> sendResult = libraryEventProducer.sendLibraryEventSynchronous(libraryEvent);
+        libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         ListenableFuture<SendResult<Integer, String>> future = libraryEventProducer.sendLibraryEventUsingProducerRecord(libraryEvent);
         SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);
         log.info("SendResult is {}", sendResult);
