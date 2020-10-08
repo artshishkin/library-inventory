@@ -6,11 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -55,13 +58,17 @@ public class LibraryEventProducer {
         Integer key = libraryEvent.getLibraryEventId();
         String jsonValue = objectMapper.writeValueAsString(libraryEvent);
 
-        ProducerRecord<Integer, String> producerRecord = new ProducerRecord<>(topic, key, jsonValue);
-        ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(producerRecord);
+        ListenableFuture<SendResult<Integer, String>> future = kafkaTemplate.send(generateProducerRecord(key, jsonValue));
         future.addCallback(
                 result -> handleSuccess(key, jsonValue, result),
                 ex -> handleFailure(key, jsonValue, ex)
         );
         return future;
+    }
+
+    private ProducerRecord<Integer, String> generateProducerRecord(Integer key, String jsonValue) {
+        Iterable<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
+        return new ProducerRecord<>(topic, null, key, jsonValue, headers);
     }
 
     private void handleFailure(Integer key, String value, Throwable ex) {
