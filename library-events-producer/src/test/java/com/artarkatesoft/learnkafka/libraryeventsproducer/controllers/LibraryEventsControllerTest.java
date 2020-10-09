@@ -17,6 +17,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.util.StringUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,7 +99,8 @@ class LibraryEventsControllerTest {
                         .content(jsonEvent))
 
                 //then
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError())
+                .andExpect(MockMvcResultMatchers.content().string("book - must not be null"));
 
         then(libraryEventProducer).shouldHaveNoInteractions();
     }
@@ -122,15 +126,24 @@ class LibraryEventsControllerTest {
         String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
 
         //when
-        mockMvc.perform(
+        MvcResult mvcResult = mockMvc.perform(
                 post(LibraryEventsController.BASE_URL)
                         .accept(APPLICATION_JSON)
                         .contentType(APPLICATION_JSON)
                         .content(jsonEvent))
 
                 //then
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError())
+                .andReturn();
 
         then(libraryEventProducer).shouldHaveNoInteractions();
+        String responseContent = mvcResult.getResponse().getContentAsString();
+
+        if (bookId == null)
+            assertThat(responseContent).contains("book.id - must not be null");
+        if (StringUtils.isEmpty(bookName))
+            assertThat(responseContent).contains("book.name - must not be empty");
+        if (StringUtils.isEmpty(bookAuthor))
+            assertThat(responseContent).contains("book.author - must not be empty");
     }
 }
