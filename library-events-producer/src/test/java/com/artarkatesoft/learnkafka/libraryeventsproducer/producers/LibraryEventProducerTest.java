@@ -5,6 +5,8 @@ import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -78,7 +80,11 @@ class LibraryEventProducerTest {
         SettableListenableFuture<SendResult<Integer, String>> futureStub = new SettableListenableFuture<>();
         String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
         ProducerRecord<Integer, String> producerRecord = new ProducerRecord<>(TOPIC, null, jsonEvent);
-        SendResult<Integer, String> sendResultStub = new SendResult<>(producerRecord, null);
+
+        int stubPartition = 2;
+        TopicPartition stubTopicPartition = new TopicPartition(TOPIC, stubPartition);
+        RecordMetadata stubRecordMetadata = new RecordMetadata(stubTopicPartition, 1, 1, System.currentTimeMillis(), 123L, 123, 123);
+        SendResult<Integer, String> sendResultStub = new SendResult<>(producerRecord, stubRecordMetadata);
         futureStub.set(sendResultStub);
 
         given(kafkaTemplate.send(isA(ProducerRecord.class))).willReturn(futureStub);
