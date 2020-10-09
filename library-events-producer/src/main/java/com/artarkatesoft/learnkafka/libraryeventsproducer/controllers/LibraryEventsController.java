@@ -11,6 +11,7 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -27,7 +28,7 @@ public class LibraryEventsController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LibraryEvent newLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
+    public LibraryEvent newLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         ListenableFuture<SendResult<Integer, String>> future = libraryEventProducer.sendLibraryEventUsingProducerRecord(libraryEvent);
         SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);

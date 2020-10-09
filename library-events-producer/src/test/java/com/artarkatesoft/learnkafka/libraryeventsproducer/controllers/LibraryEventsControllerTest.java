@@ -7,6 +7,8 @@ import com.artarkatesoft.learnkafka.libraryeventsproducer.producers.LibraryEvent
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
@@ -77,5 +79,58 @@ class LibraryEventsControllerTest {
                 () -> assertThat(captorValue.getBook()).isEqualTo(book),
                 () -> assertThat(captorValue.getLibraryEventType()).isEqualTo(LibraryEventType.NEW)
         );
+    }
+
+    @Test
+    void newLibraryEvent_givenNullBook() throws Exception {
+
+        //given
+        LibraryEvent libraryEvent = LibraryEvent.builder().book(null).build();
+        String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
+
+        //when
+        mockMvc.perform(
+                post(LibraryEventsController.BASE_URL)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(jsonEvent))
+
+                //then
+                .andExpect(status().is4xxClientError());
+
+        then(libraryEventProducer).shouldHaveNoInteractions();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            ",name1,auth1",
+            "123,,auth1",
+            "123,name1,",
+            ",,auth1",
+            "123,,",
+            ",,"})
+    void newLibraryEvent_givenWrongBookAttributes(Integer bookId, String bookName, String bookAuthor) throws Exception {
+
+        //given
+        Book book = Book.builder()
+                .id(bookId)
+                .author(bookAuthor)
+                .name(bookName)
+                .build();
+
+        LibraryEvent libraryEvent = LibraryEvent.builder().book(book).build();
+        String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
+
+        //when
+        mockMvc.perform(
+                post(LibraryEventsController.BASE_URL)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(jsonEvent))
+
+                //then
+                .andExpect(status().is4xxClientError());
+
+        then(libraryEventProducer).shouldHaveNoInteractions();
     }
 }
