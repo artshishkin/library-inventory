@@ -7,9 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -17,10 +15,15 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SettableListenableFuture;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
+import static com.artarkatesoft.learnkafka.libraryeventsproducer.producers.LibraryEventProducer.TOPIC;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class LibraryEventProducerTest {
@@ -33,6 +36,9 @@ class LibraryEventProducerTest {
 
     @InjectMocks
     LibraryEventProducer libraryEventProducer;
+
+    @Captor
+    ArgumentCaptor<ProducerRecord<Integer, String>> producerRecordCaptor;
 
     @Test
     void sendLibraryEventUsingProducerRecord_failure() throws JsonProcessingException {
@@ -58,5 +64,40 @@ class LibraryEventProducerTest {
                 .hasCauseExactlyInstanceOf(RuntimeException.class)
                 .hasRootCauseMessage("Exception calling Kafka")
         ;
+    }
+
+    @Test
+    void sendLibraryEventUsingProducerRecord_success() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
+        //given
+        Book book = Book.builder()
+                .id(123)
+                .author("Art")
+                .name("We are the best")
+                .build();
+        LibraryEvent libraryEvent = LibraryEvent.builder().book(book).build();
+        SettableListenableFuture<SendResult<Integer, String>> futureStub = new SettableListenableFuture<>();
+        String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
+        ProducerRecord<Integer, String> producerRecord = new ProducerRecord<>(TOPIC, null, jsonEvent);
+        SendResult<Integer, String> sendResultStub = new SendResult<>(producerRecord, null);
+        futureStub.set(sendResultStub);
+
+        given(kafkaTemplate.send(isA(ProducerRecord.class))).willReturn(futureStub);
+
+        //when
+        ListenableFuture<SendResult<Integer, String>> future = libraryEventProducer.sendLibraryEventUsingProducerRecord(libraryEvent);
+
+        //then
+        SendResult<Integer, String> sendResult = future.get();
+        then(kafkaTemplate).should().send(producerRecordCaptor.capture());
+
+        assertThat(sendResult).isEqualTo(sendResultStub);
+
+        ProducerRecord<Integer, String> captorValue = producerRecordCaptor.getValue();
+        assertAll(
+                () -> assertThat(captorValue.headers().headers("event-source")).hasSize(1),
+                () -> assertThat(captorValue.key()).isNull(),
+                () -> assertThat(captorValue.topic()).isEqualTo(TOPIC),
+                () -> assertThat(captorValue.value()).isEqualTo(jsonEvent)
+        );
     }
 }

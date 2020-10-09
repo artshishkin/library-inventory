@@ -25,7 +25,7 @@ public class LibraryEventProducer {
 
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    public static final String topic = "library-events";
+    public static final String TOPIC = "library-events";
 
     public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         Integer key = libraryEvent.getLibraryEventId();
@@ -68,7 +68,7 @@ public class LibraryEventProducer {
 
     private ProducerRecord<Integer, String> generateProducerRecord(Integer key, String jsonValue) {
         Iterable<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
-        return new ProducerRecord<>(topic, null, key, jsonValue, headers);
+        return new ProducerRecord<>(TOPIC, null, key, jsonValue, headers);
     }
 
     private void handleFailure(Integer key, String value, Throwable ex) {
