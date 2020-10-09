@@ -2,13 +2,20 @@ package com.artarkatesoft.learnkafka.libraryeventsproducer.controllers;
 
 import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.Book;
 import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEvent;
+import com.artarkatesoft.learnkafka.libraryeventsproducer.producers.LibraryEventProducer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.concurrent.ListenableFuture;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -22,6 +29,9 @@ class LibraryEventsControllerTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @MockBean
+    LibraryEventProducer libraryEventProducer;
+
     @Test
     void newLibraryEvent() throws Exception {
 
@@ -33,6 +43,11 @@ class LibraryEventsControllerTest {
                 .build();
         LibraryEvent libraryEvent = LibraryEvent.builder().book(book).build();
         String jsonEvent = objectMapper.writeValueAsString(libraryEvent);
+
+
+        ListenableFuture<SendResult<Integer, String>> future = Mockito.mock(ListenableFuture.class);
+        given(libraryEventProducer.sendLibraryEventUsingProducerRecord(any(LibraryEvent.class))).willReturn(future);
+//        given(future.get(anyLong(),any(TimeUnit.class))).willReturn(null);
 
         //when
         mockMvc.perform(
