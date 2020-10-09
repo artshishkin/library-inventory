@@ -25,7 +25,7 @@ public class LibraryEventProducer {
 
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final String topic = "library-events";
+    public static final String topic = "library-events";
 
     public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         Integer key = libraryEvent.getLibraryEventId();

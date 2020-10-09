@@ -8,12 +8,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.TestPropertySource;
 
 import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = {
+        "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.admin.properties.bootstrap.servers=${spring.embedded.kafka.brokers}"
+})
+@EmbeddedKafka(topics = {"library-events"}, partitions = 3)
 class LibraryEventsControllerIT {
 
     @Autowired
@@ -37,6 +44,8 @@ class LibraryEventsControllerIT {
 
         //then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        LibraryEvent responseLibraryEvent = responseEntity.getBody();
+        assertThat(responseLibraryEvent.getBook().getAuthor()).isEqualTo("Art");
 
     }
 }
