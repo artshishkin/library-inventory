@@ -6,6 +6,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>library-events-producer</module>
+        <module>library-events-consumer</module>
     </modules>
 
     <parent>
