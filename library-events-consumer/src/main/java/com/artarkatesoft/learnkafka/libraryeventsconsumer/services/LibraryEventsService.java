@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -29,11 +31,22 @@ public class LibraryEventsService {
                 save(libraryEvent);
                 break;
             case UPDATE:
+                validate(libraryEvent);
+                save(libraryEvent);
                 break;
             default:
                 log.info("Wrong Library Event Type: `{}` for LibraryEvent {}", libraryEventType, libraryEvent);
         }
 
+    }
+
+    private void validate(LibraryEvent libraryEvent) {
+        Integer libraryEventId = libraryEvent.getLibraryEventId();
+        if (libraryEventId == null)
+            throw new IllegalArgumentException("Library Id is missing for " + libraryEvent);
+        if (!repository.existsById(libraryEventId))
+            throw new EntityNotFoundException("Library Event with ID `" + libraryEventId + "` not found");
+        log.info("Validation is successful for the library event: {}", libraryEvent);
     }
 
     private void save(LibraryEvent libraryEvent) {
