@@ -1,7 +1,7 @@
 package com.artarkatesoft.learnkafka.libraryeventsproducer.controllers;
 
-import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEvent;
-import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEventType;
+import com.artarkatesoft.learnkafka.libraryeventsdata.domain.LibraryEvent;
+import com.artarkatesoft.learnkafka.libraryeventsdata.domain.LibraryEventType;
 import com.artarkatesoft.learnkafka.libraryeventsproducer.producers.LibraryEventProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.SettableListenableFuture;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 

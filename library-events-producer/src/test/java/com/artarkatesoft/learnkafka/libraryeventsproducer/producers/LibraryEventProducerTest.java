@@ -1,7 +1,7 @@
 package com.artarkatesoft.learnkafka.libraryeventsproducer.producers;
 
-import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.Book;
-import com.artarkatesoft.learnkafka.libraryeventsproducer.domain.LibraryEvent;
+import com.artarkatesoft.learnkafka.libraryeventsdata.domain.Book;
+import com.artarkatesoft.learnkafka.libraryeventsdata.domain.LibraryEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;

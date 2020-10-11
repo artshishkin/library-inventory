@@ -9,15 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>library-events-producer</artifactId>
+    <artifactId>library-events-data</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.artarkatesoft.learnkafka</groupId>
-            <artifactId>library-events-data</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
+    <properties>
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+    </properties>
 
 </project>

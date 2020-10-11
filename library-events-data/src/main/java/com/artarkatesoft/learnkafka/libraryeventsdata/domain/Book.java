@@ -1,4 +1,4 @@
-package com.artarkatesoft.learnkafka.libraryeventsproducer.domain;
+package com.artarkatesoft.learnkafka.libraryeventsdata.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
