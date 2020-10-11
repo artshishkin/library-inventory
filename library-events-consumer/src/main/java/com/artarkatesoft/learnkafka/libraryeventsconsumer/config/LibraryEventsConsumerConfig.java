@@ -25,7 +25,7 @@ public class LibraryEventsConsumerConfig {
                 .getIfAvailable(() -> new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties())));
 
 //        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setConcurrency(3);
+//        factory.setConcurrency(3);
         return factory;
     }
 
