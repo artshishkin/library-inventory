@@ -10,6 +10,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -26,11 +30,13 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeastOnce;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
@@ -128,6 +134,45 @@ class LibraryEventsConsumerIT {
                 () -> assertThat(libraryEventUpdated.getBook().getId()).isEqualTo(123),
                 () -> assertThat(libraryEventUpdated.getBook().getName()).isEqualTo("We are TESTING Kafka"),
                 () -> assertThat(libraryEventUpdated.getBook().getAuthor()).isEqualTo("NoArt")
+        );
+    }
+
+    static Stream<Integer> wrongLibraryEventsIdStream() {
+        return Stream.of(null, 777);
+    }
+
+    @ParameterizedTest
+    @MethodSource("wrongLibraryEventsIdStream")
+    void publishUpdateLibraryEvent_givenWrongId(Integer libraryEventId) throws ExecutionException, InterruptedException, JsonProcessingException {
+        //given
+        Book book = Book.builder()
+                .id(123)
+                .author("Art")
+                .name("We are the best")
+                .build();
+        LibraryEvent libraryEventToBeSavedInDB = LibraryEvent.builder().book(book).build();
+        book.setLibraryEvent(libraryEventToBeSavedInDB);
+
+        LibraryEvent savedEvent = repository.save(libraryEventToBeSavedInDB);
+
+        String json = "{\"libraryEventId\":" + libraryEventId + ",\"libraryEventType\":\"UPDATE\",\"book\":{\"id\":123,\"name\":\"We are TESTING Kafka\",\"author\":\"NoArt\"}}";
+
+        //when
+        kafkaTemplate.sendDefault(json).get();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        latch.await(3, TimeUnit.SECONDS);
+
+        //then
+        then(libraryEventsConsumerSpy).should(atLeastOnce()).onMessage(isA(ConsumerRecord.class));
+        then(libraryEventsServiceSpy).should(atLeastOnce()).processLibraryEvents(isA(ConsumerRecord.class));
+
+        assertThat(repository.count()).isEqualTo(1);
+        LibraryEvent libraryEventUpdated = repository.findById(savedEvent.getLibraryEventId()).get();
+        assertAll(
+                () -> assertThat(libraryEventUpdated.getBook().getId()).isEqualTo(123),
+                () -> assertThat(libraryEventUpdated.getBook().getName()).isEqualTo("We are the best"),
+                () -> assertThat(libraryEventUpdated.getBook().getAuthor()).isEqualTo("Art")
         );
     }
 }
