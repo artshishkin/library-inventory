@@ -16,7 +16,8 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         acks: all
-        retries: 100
+        retries: 10
+        retry.backoff.ms: 1000
 
     admin:
       properties:

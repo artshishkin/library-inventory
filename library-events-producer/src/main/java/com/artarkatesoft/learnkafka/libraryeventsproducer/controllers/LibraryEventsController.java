@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -32,7 +31,8 @@ public class LibraryEventsController {
     public LibraryEvent newLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         ListenableFuture<SendResult<Integer, String>> future = libraryEventProducer.sendLibraryEventUsingProducerRecord(libraryEvent);
-        SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);
+//        SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);
+        SendResult<Integer, String> sendResult = future.get();
         log.info("SendResult is {}", sendResult);
         return libraryEvent;
     }
@@ -44,7 +44,8 @@ public class LibraryEventsController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please pass the LibraryEventId");
         libraryEvent.setLibraryEventType(LibraryEventType.UPDATE);
         ListenableFuture<SendResult<Integer, String>> future = libraryEventProducer.sendLibraryEventUsingProducerRecord(libraryEvent);
-        SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);
+//        SendResult<Integer, String> sendResult = future.get(1, TimeUnit.SECONDS);
+        SendResult<Integer, String> sendResult = future.get();
         log.info("SendResult is {}", sendResult);
         return libraryEvent;
     }
