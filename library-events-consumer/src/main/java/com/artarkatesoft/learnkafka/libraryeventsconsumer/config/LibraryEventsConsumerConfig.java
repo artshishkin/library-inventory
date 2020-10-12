@@ -6,13 +6,19 @@ import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerConta
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Configuration
@@ -41,11 +47,18 @@ public class LibraryEventsConsumerConfig {
 
     private RetryTemplate retryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
-        retryTemplate.setRetryPolicy(new SimpleRetryPolicy(3));
+        retryTemplate.setRetryPolicy(retryPolicy());
         FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
         backOffPolicy.setBackOffPeriod(1000);
         retryTemplate.setBackOffPolicy(backOffPolicy);
         return retryTemplate;
     }
 
+    private RetryPolicy retryPolicy() {
+        Map<Class<? extends Throwable>, Boolean> retryableExceptions = new HashMap<>();
+        retryableExceptions.put(IllegalArgumentException.class, false);
+        retryableExceptions.put(EntityNotFoundException.class, false);
+        retryableExceptions.put(RecoverableDataAccessException.class, true);
+        return new SimpleRetryPolicy(3, retryableExceptions, true);
+    }
 }

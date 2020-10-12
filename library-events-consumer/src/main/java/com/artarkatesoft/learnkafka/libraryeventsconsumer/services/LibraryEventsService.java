@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
@@ -25,6 +26,12 @@ public class LibraryEventsService {
         LibraryEvent libraryEvent = objectMapper.readValue(consumerRecord.value(), LibraryEvent.class);
         log.info("Library Event: {}", libraryEvent);
         LibraryEventType libraryEventType = libraryEvent.getLibraryEventType();
+
+        //just for study purposes
+        if (libraryEvent.getLibraryEventId() != null && libraryEvent.getLibraryEventId() == 0) {
+            throw new RecoverableDataAccessException("Temporary Network Issue");
+        }
+
         switch (libraryEventType) {
             case NEW:
                 libraryEvent.setLibraryEventId(null);

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -132,13 +133,16 @@ class LibraryEventsConsumerIT {
         );
     }
 
-    static Stream<Integer> wrongLibraryEventsIdStream() {
-        return Stream.of(null, 777);
+    static Stream<Arguments> wrongLibraryEventsIdWithRetry() {
+        return Stream.of(
+                Arguments.of(null, 1),
+                Arguments.of(777, 1),
+                Arguments.of(0, 3));
     }
 
     @ParameterizedTest
-    @MethodSource("wrongLibraryEventsIdStream")
-    void publishUpdateLibraryEvent_givenWrongId(Integer libraryEventId) throws ExecutionException, InterruptedException, JsonProcessingException {
+    @MethodSource("wrongLibraryEventsIdWithRetry")
+    void publishUpdateLibraryEvent_givenWrongId(Integer libraryEventId, Integer retryCount) throws ExecutionException, InterruptedException, JsonProcessingException {
         //given
         Book book = Book.builder()
                 .id(123)
@@ -159,8 +163,8 @@ class LibraryEventsConsumerIT {
         latch.await(3, TimeUnit.SECONDS);
 
         //then
-        then(libraryEventsConsumerSpy).should(times(3)).onMessage(isA(ConsumerRecord.class));
-        then(libraryEventsServiceSpy).should(times(3)).processLibraryEvents(isA(ConsumerRecord.class));
+        then(libraryEventsConsumerSpy).should(times(retryCount)).onMessage(isA(ConsumerRecord.class));
+        then(libraryEventsServiceSpy).should(times(retryCount)).processLibraryEvents(isA(ConsumerRecord.class));
 
         assertThat(repository.count()).isEqualTo(1);
         LibraryEvent libraryEventUpdated = repository.findById(savedEvent.getLibraryEventId()).get();
