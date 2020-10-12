@@ -5,15 +5,12 @@ import com.artarkatesoft.learnkafka.libraryeventsconsumer.entity.LibraryEvent;
 import com.artarkatesoft.learnkafka.libraryeventsconsumer.repositories.LibraryEventsRepository;
 import com.artarkatesoft.learnkafka.libraryeventsconsumer.services.LibraryEventsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.verification.VerificationMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -23,20 +20,18 @@ import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
 
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
@@ -164,8 +159,8 @@ class LibraryEventsConsumerIT {
         latch.await(3, TimeUnit.SECONDS);
 
         //then
-        then(libraryEventsConsumerSpy).should(atLeastOnce()).onMessage(isA(ConsumerRecord.class));
-        then(libraryEventsServiceSpy).should(atLeastOnce()).processLibraryEvents(isA(ConsumerRecord.class));
+        then(libraryEventsConsumerSpy).should(times(3)).onMessage(isA(ConsumerRecord.class));
+        then(libraryEventsServiceSpy).should(times(3)).processLibraryEvents(isA(ConsumerRecord.class));
 
         assertThat(repository.count()).isEqualTo(1);
         LibraryEvent libraryEventUpdated = repository.findById(savedEvent.getLibraryEventId()).get();
