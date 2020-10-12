@@ -42,6 +42,16 @@ public class LibraryEventsConsumerConfig {
                 log.error("Exception in consumerConfig is {} and teh record is {}", thrownException.getMessage(), data));
 
         factory.setRetryTemplate(retryTemplate());
+        factory.setRecoveryCallback(context -> {
+            if (context.getLastThrowable().getCause() instanceof RecoverableDataAccessException) {
+                //invoke recovery logic
+                log.info("Inside recoverable logic");
+            } else {
+                log.info("Inside Non-recoverable logic");
+                throw new RuntimeException(context.getLastThrowable().getMessage());
+            }
+            return null;
+        });
         return factory;
     }
 
