@@ -1,7 +1,10 @@
 package com.artarkatesoft.learnkafka.libraryeventsconsumer.config;
 
+import com.artarkatesoft.learnkafka.libraryeventsconsumer.services.LibraryEventsService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +28,9 @@ import java.util.Map;
 @EnableKafka
 public class LibraryEventsConsumerConfig {
 
+    @Autowired
+    LibraryEventsService libraryEventsService;
+
     @Bean
     ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
             ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
@@ -46,6 +52,14 @@ public class LibraryEventsConsumerConfig {
             if (context.getLastThrowable().getCause() instanceof RecoverableDataAccessException) {
                 //invoke recovery logic
                 log.info("Inside recoverable logic");
+/*
+                Stream.of(context.attributeNames())
+                        .forEach(attributeName ->
+                                log.info("Attribute name is: {}, value is: {}", attributeName, context.getAttribute(attributeName)));
+*/
+                ConsumerRecord<Integer, String> consumerRecord = (ConsumerRecord<Integer, String>) context.getAttribute("record");
+                libraryEventsService.handleRecovery(consumerRecord);
+
             } else {
                 log.info("Inside Non-recoverable logic");
                 throw new RuntimeException(context.getLastThrowable().getMessage());

@@ -23,6 +23,7 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.times;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -160,12 +162,17 @@ class LibraryEventsConsumerIT {
         kafkaTemplate.sendDefault(json).get();
 
         CountDownLatch latch = new CountDownLatch(1);
-        latch.await(3, TimeUnit.SECONDS);
+        latch.await(4, TimeUnit.SECONDS);
 
         //then
-        then(libraryEventsConsumerSpy).should(times(retryCount)).onMessage(isA(ConsumerRecord.class));
-        then(libraryEventsServiceSpy).should(times(retryCount)).processLibraryEvents(isA(ConsumerRecord.class));
-
+        if (!Objects.equals(libraryEventId, 0)) {
+            then(libraryEventsConsumerSpy).should(times(retryCount)).onMessage(isA(ConsumerRecord.class));
+            then(libraryEventsServiceSpy).should(times(retryCount)).processLibraryEvents(isA(ConsumerRecord.class));
+        } else {
+            then(libraryEventsConsumerSpy).should(atLeast(retryCount)).onMessage(isA(ConsumerRecord.class));
+            then(libraryEventsServiceSpy).should(atLeast(retryCount)).processLibraryEvents(isA(ConsumerRecord.class));
+            then(libraryEventsServiceSpy).should(times(1)).handleRecovery(isA(ConsumerRecord.class));
+        }
         assertThat(repository.count()).isEqualTo(1);
         LibraryEvent libraryEventUpdated = repository.findById(savedEvent.getLibraryEventId()).get();
         assertAll(
