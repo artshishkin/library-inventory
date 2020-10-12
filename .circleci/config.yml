@@ -29,9 +29,9 @@ jobs: # a collection of steps
           path: target/surefire-reports
       #          path: target/failsafe-reports
 
-#      - run:
-#          name: Send to CodeCov
-#          command: bash <(curl -s https://codecov.io/bash)
+      - run:
+          name: Send to CodeCov
+          command: bash <(curl -s https://codecov.io/bash)
 
 #      - store_artifacts: # store the uberjar as an artifact
 #          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
