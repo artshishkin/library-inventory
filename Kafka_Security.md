@@ -84,8 +84,12 @@ ssl.endpoint.identification.algorithm=
 
 - Create a topic
 
+```shell script
+./kafka-topics.sh --create --topic test-topic-ssl -zookeeper localhost:2181 --replication-factor 1 --partitions 3
 ```
-./kafka-topics.sh --create --topic test-topic -zookeeper localhost:2181 --replication-factor 1 --partitions 3
+- or
+```
+kafka-topics.bat --create --topic test-topic-ssl -zookeeper localhost:2181 --replication-factor 1 --partitions 3
 ```
 
 - Create a file named **client-ssl.properties** and have the below properties configured in there.
@@ -102,7 +106,13 @@ ssl.truststore.type=JKS
 - Command to Produce Messages to the secured topic
 
 ```
-./kafka-console-producer.sh --broker-list localhost:9095,localhost:9096,localhost:9097 --topic test-topic --producer.config client-ssl.properties
+./kafka-console-producer.sh --broker-list localhost:9095,localhost:9096,localhost:9097 --topic test-topic-ssl --producer.config client-ssl.properties
+```
+
+- or
+
+```
+kafka-console-producer.bat --broker-list localhost:9095,localhost:9096,localhost:9097 --topic test-topic-ssl --producer.config ..\..\config\client-ssl.properties
 ```
 
 ## Consuming Messages from a Secured Topic
@@ -110,7 +120,13 @@ ssl.truststore.type=JKS
 - Command to Produce Messages to the secured topic
 
 ```
-./kafka-console-consumer.sh --bootstrap-server localhost:9095,localhost:9096,localhost:9097 --topic test-topic --consumer.config client-ssl.properties
+./kafka-console-consumer.sh --bootstrap-server localhost:9095,localhost:9096,localhost:9097 --topic test-topic-ssl --consumer.config client-ssl.properties
+```
+
+- or
+
+```
+kafka-console-consumer.bat --bootstrap-server localhost:9095,localhost:9096,localhost:9097 --topic test-topic-ssl --consumer.config ..\..\config\client-ssl.properties
 ```
 
 
