@@ -18,7 +18,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: library-events-listener-group
-#    for tests
+    #    for tests
     producer:
       bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
       key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
@@ -40,18 +40,45 @@ spring:
     hibernate:
       ddl-auto: update
 
-
 ---
 spring:
   profiles: nonprod
   kafka:
+    ssl:
+      trust-store-location: file:D:\Art\IdeaProjects\Study\Dilip\KafkaSpringBoot\ssl\client.truststore.jks
+      trust-store-password: artpassword
+      key-store-location: file:D:\Art\IdeaProjects\Study\Dilip\KafkaSpringBoot\ssl\client.keystore.jks
+      key-store-password: artpassword
     template:
       default-topic: library-events
     consumer:
-      bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
       key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: library-events-listener-group
+    #    for tests
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    properties:
+      security.protocol: SSL
+      ssl.endpoint.identification.algorithm:
+    bootstrap-servers: localhost:9095,localhost:9096,localhost:9097
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
 
 ---
 spring:
