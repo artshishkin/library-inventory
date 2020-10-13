@@ -4,7 +4,7 @@ server:
 
 spring:
   profiles:
-    active: local
+    active: nonprod
 
 ---
 spring:
@@ -22,5 +22,29 @@ spring:
     admin:
       properties:
         bootstrap.servers: localhost:9092,localhost:9093,localhost:9094
+    template:
+      default-topic: library-events
+
+---
+spring:
+  profiles: nonprod
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9095,localhost:9096,localhost:9097
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        acks: all
+        retries: 10
+        retry.backoff.ms: 1000
+        security.protocol: SSL
+        ssl.endpoint.identification.algorithm:
+      ssl:
+        trust-store-location: file:D:\Art\IdeaProjects\Study\Dilip\KafkaSpringBoot\ssl\client.truststore.jks
+        trust-store-password: artpassword
+        key-store-location: file:D:\Art\IdeaProjects\Study\Dilip\KafkaSpringBoot\ssl\client.keystore.jks
+        key-store-password: artpassword
+#        key-password: artpassword
+#        key-store-type: JKS
     template:
       default-topic: library-events
