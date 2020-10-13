@@ -166,3 +166,5 @@ ssl.keystore.location=<location>/client.keystore.jks
 ssl.keystore.password=password
 ssl.key.password=password
 ```
+
+- Though we are running client and server on the same machine we could receive `client.keystore.jks` by copying from `server.keystore.jks`
